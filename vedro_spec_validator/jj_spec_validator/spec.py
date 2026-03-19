@@ -24,12 +24,14 @@ class Spec:
                  skip_if_failed_to_get_spec: bool = False,
                  is_strict: bool = False,
                  force_strict: bool = False,
+                 cache_processed: bool = False,
                  ):
         self.spec_link = spec_link
         self.func_name = func_name
         self.skip_if_failed_to_get_spec = skip_if_failed_to_get_spec
         self.is_strict = is_strict
         self.force_strict = force_strict
+        self.cache_processed = cache_processed
 
     def _download_spec(self) -> httpx.Response | None:
         def handle_exception(exc: Exception, message: str = ""):
@@ -118,7 +120,7 @@ class Spec:
 
         if urlparse(self.spec_link).scheme in ('http', 'https', 'ftp') and urlparse(self.spec_link).netloc:
             if validate_cache_file(self.spec_link):
-                if Config.CACHE_AS_PROCESSED_SCHEMAS:
+                if self.cache_processed:
                     return load_cache(self.spec_link)
                 raw_spec = load_cache(self.spec_link)
             else:
@@ -128,7 +130,7 @@ class Spec:
                 raw_spec = self._parse_spec(response)
             schema_data = self._get_schema_from_json(raw_spec)
             dict_of_schemas = self._build_dict_of_schemas(schema_data)
-            if Config.CACHE_AS_PROCESSED_SCHEMAS:
+            if self.cache_processed:
                 save_cache(spec_link=self.spec_link, obj=dict_of_schemas)
             else:
                 save_cache(spec_link=self.spec_link, obj=raw_spec)
