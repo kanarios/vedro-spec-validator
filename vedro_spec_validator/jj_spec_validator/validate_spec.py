@@ -46,7 +46,8 @@ def validate_spec(*,
                 func_name=func_name,
                 skip_if_failed_to_get_spec=skip_if_failed_to_get_spec if skip_if_failed_to_get_spec is not None else Config.SKIP_IF_FAILED_TO_GET_SPEC,
                 is_strict=is_strict if is_strict is not None else Config.IS_STRICT,
-                force_strict=force_strict
+                force_strict=force_strict,
+                cache_processed=Config.CACHE_AS_PROCESSED_SCHEMAS,
             )
 
             validator = Validator(
