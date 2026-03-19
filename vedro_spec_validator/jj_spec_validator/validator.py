@@ -4,10 +4,9 @@ from typing import Any, TypeVar
 from d42.validation import ValidationException, validate_or_fail
 from schemax import SchemaData
 
-from . import Config
 from .output import output
 from .spec import Spec
-from .utils import create_openapi_matcher, get_forced_strict_spec, load_cache, validate_non_strict
+from .utils import create_openapi_matcher, get_forced_strict_spec, validate_non_strict
 from .utils._refiner import has_ellipsis_in_all_branches
 
 _T = TypeVar('_T')

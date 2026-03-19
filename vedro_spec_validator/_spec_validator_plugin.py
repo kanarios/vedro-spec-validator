@@ -4,15 +4,14 @@ import shutil
 from pathlib import Path
 from typing import Any, Type
 
+import schemax
 from vedro.core import Dispatcher, Plugin, PluginConfig
 from vedro.events import CleanupEvent, ScenarioReportedEvent, StartupEvent
 
 from .jj_spec_validator import Config as jj_sv_Config
 from .jj_spec_validator.output import output
-import schemax
 
 jj_sv_Config.IS_ENABLED = False
-
 
 __all__ = ("SpecValidator", "SpecValidatorPlugin")
 
@@ -30,12 +29,14 @@ class SpecValidatorPlugin(Plugin):
         jj_sv_Config.IS_ENABLED = True
         jj_sv_Config.SKIP_IF_FAILED_TO_GET_SPEC = config.skip_if_failed_to_get_spec
         jj_sv_Config.OUTPUT_FUNCTION = self._custom_output
+        jj_sv_Config.DEFAULT_MEMOIZER = config.default_memoizer
+        jj_sv_Config.CACHE_AS_PROCESSED_SCHEMAS = config.cache_as_processed_schemas
         schemax.Config.OUTPUT_FUNCTION = self._schemax_output_catcher
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
         dispatcher.listen(ScenarioReportedEvent, self.on_scenario_reported) \
-                  .listen(StartupEvent, self.on_startup) \
-                  .listen(CleanupEvent, self.finish_run)
+            .listen(StartupEvent, self.on_startup) \
+            .listen(CleanupEvent, self.finish_run)
 
     def on_startup(self, event: StartupEvent) -> None:
         self._scheduler = event.scheduler
@@ -148,6 +149,10 @@ class SpecValidator(PluginConfig):
 
     is_strict = False  # If True - validate exact structure in given mocked. False - allow to mock incomplete body.
 
-    skip_if_failed_to_get_spec = False # If True - validation will be skipped if failed to get spec.
+    skip_if_failed_to_get_spec = False  # If True - validation will be skipped if failed to get spec.
 
     show_performance_metrics = False  # if True, execution time metrics will be printed to console
+
+    cache_as_processed_schemas = False # If True, converts specifications into schemas and caches them that way
+
+    default_memoizer = None  # Provides memoization for plugin's inner workings

@@ -1,10 +1,10 @@
-import unittest
-from unittest.mock import patch, Mock, MagicMock
 import asyncio
+import unittest
+from unittest.mock import MagicMock, Mock, patch
 
-from vedro_spec_validator.jj_spec_validator.validate_spec import validate_spec
 from vedro_spec_validator.jj_spec_validator._config import Config
 from vedro_spec_validator.jj_spec_validator.spec import Spec
+from vedro_spec_validator.jj_spec_validator.validate_spec import validate_spec
 from vedro_spec_validator.jj_spec_validator.validator import Validator
 
 

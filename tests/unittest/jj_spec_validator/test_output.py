@@ -1,10 +1,10 @@
-import unittest
-from unittest.mock import patch, Mock, call
 import sys
+import unittest
 from io import StringIO
+from unittest.mock import Mock, call, patch
 
-from vedro_spec_validator.jj_spec_validator.output import output
 from vedro_spec_validator.jj_spec_validator._config import Config
+from vedro_spec_validator.jj_spec_validator.output import output
 
 
 class TestOutput(unittest.TestCase):

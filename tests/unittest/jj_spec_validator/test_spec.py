@@ -1,13 +1,13 @@
 import unittest
-from unittest.mock import patch, Mock, mock_open, MagicMock, ANY
-import httpx
-import json
-import yaml
 from pathlib import Path
+from unittest.mock import ANY, MagicMock, Mock, mock_open, patch
 
-from vedro_spec_validator.jj_spec_validator.spec import Spec, SchemaParseError
-from vedro_spec_validator.jj_spec_validator._config import Config
+import httpx
+import yaml
 from schemax import SchemaData
+
+from vedro_spec_validator.jj_spec_validator._config import Config
+from vedro_spec_validator.jj_spec_validator.spec import SchemaParseError, Spec
 
 
 class TestDownloadSpec(unittest.TestCase):
@@ -262,7 +262,7 @@ class TestGetSchemaFromJson(unittest.TestCase):
         result = self.spec._get_schema_from_json(raw_spec)
         
         self.assertEqual(result, expected_schema_data)
-        mock_collect_schema_data.assert_called_once_with(raw_spec)
+        mock_collect_schema_data.assert_called_once_with(raw_spec, None)
     
     @patch('vedro_spec_validator.jj_spec_validator.spec.collect_schema_data')
     def test_get_schema_from_json_error(self, mock_collect_schema_data):
@@ -278,7 +278,7 @@ class TestGetSchemaFromJson(unittest.TestCase):
         self.assertTrue("Probably the spec is broken or has an unsupported format" in str(context.exception))
         self.assertTrue(f"Original exception: {original_exception}" in str(context.exception))
         
-        mock_collect_schema_data.assert_called_once_with(raw_spec)
+        mock_collect_schema_data.assert_called_once_with(raw_spec, None)
 
 
 class TestBuildDictOfSchemas(unittest.TestCase):
@@ -511,7 +511,7 @@ class TestGetPreparedSpecUnits(unittest.TestCase):
         mock_validate_cache.assert_called_once_with(spec_link)
         mock_download_spec.assert_called_once()
         mock_parse_spec.assert_called_once_with(mock_response)
-        mock_save_cache.assert_called_once_with(spec_link=spec_link, raw_schema=raw_spec)
+        mock_save_cache.assert_called_once_with(spec_link=spec_link, obj=raw_spec)
         mock_get_schema.assert_called_once_with(raw_spec)
         mock_build_dict.assert_called_once_with(schema_data)
     

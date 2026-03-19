@@ -12,3 +12,5 @@ class Config:
     IS_STRICT = False
     SKIP_IF_FAILED_TO_GET_SPEC = False
     SHOW_PERFORMANCE_METRICS = False  # if True, execution time metrics will be printed to console
+    CACHE_AS_PROCESSED_SCHEMAS = False # If True, converts specifications into schemas and caches them that way
+    DEFAULT_MEMOIZER = None # Provides memoization for plugin's inner workings
