@@ -5,7 +5,6 @@ import click
 
 from ._config import Config
 from .spec import Spec
-from .utils._cacheir import save_cache
 
 
 @click.command()
@@ -27,21 +26,8 @@ def cache_specs(spec_links: List[str], timeout: int, cache_processed: bool) -> N
         spec_start_time = time.time()
         try:
             click.echo(f"\nProcessing {spec_link}...")
-            spec = Spec(spec_link=spec_link, func_name="cache_specs")
-            response = spec._download_spec()
-
-            if response is None:
-                click.echo(f"❌ Failed to download specification: {spec_link}")
-                continue
-
-            raw_spec = spec._parse_spec(response)
-            if cache_processed:
-                click.echo("Processing specification before caching...")
-                schema_data = spec._get_schema_from_json(raw_spec)
-                dict_of_schemas = spec._build_dict_of_schemas(schema_data)
-                save_cache(spec_link=spec_link, obj=dict_of_schemas)
-            else:
-                save_cache(spec_link=spec_link, obj=raw_spec)
+            spec = Spec(spec_link=spec_link, func_name="cache_specs", cache_processed=cache_processed)
+            spec.get_prepared_spec_units()
             spec_time = time.time() - spec_start_time
             click.echo(f"✅ Specification successfully cached: {spec_link} (took {spec_time:.2f}s)")
 
