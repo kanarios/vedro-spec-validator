@@ -81,7 +81,7 @@ class Spec:
 
     def _get_schema_from_json(self, raw_spec: dict[str, Any]) -> list[SchemaData]:
         try:
-            schema_data = collect_schema_data(raw_spec, Config.DEFAULT_MEMOIZER)
+            schema_data = collect_schema_data(raw_spec, Config.MEMOIZER_FACTORY())
         except Exception as e:
             raise SchemaParseError(
                 f"Failed to parse {self.spec_link} to schema via schemax.\n"

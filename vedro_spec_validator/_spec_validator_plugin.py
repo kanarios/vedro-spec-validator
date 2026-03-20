@@ -2,9 +2,10 @@ import json
 import os
 import shutil
 from pathlib import Path
-from typing import Any, Type
+from typing import Any, Callable, Type
 
 import schemax
+from schemax import Memoizer
 from vedro.core import Dispatcher, Plugin, PluginConfig
 from vedro.events import CleanupEvent, ScenarioReportedEvent, StartupEvent
 
@@ -29,7 +30,7 @@ class SpecValidatorPlugin(Plugin):
         jj_sv_Config.IS_ENABLED = True
         jj_sv_Config.SKIP_IF_FAILED_TO_GET_SPEC = config.skip_if_failed_to_get_spec
         jj_sv_Config.OUTPUT_FUNCTION = self._custom_output
-        jj_sv_Config.DEFAULT_MEMOIZER = config.default_memoizer
+        jj_sv_Config.MEMOIZER_FACTORY = config.memoizer_factory
         jj_sv_Config.CACHE_AS_PROCESSED_SCHEMAS = config.cache_as_processed_schemas
         schemax.Config.OUTPUT_FUNCTION = self._schemax_output_catcher
 
@@ -155,4 +156,4 @@ class SpecValidator(PluginConfig):
 
     cache_as_processed_schemas = False # If True, converts specifications into schemas and caches them that way
 
-    default_memoizer = None  # Provides memoization for plugin's inner workings
+    memoizer_factory: Callable[[], Memoizer] = None  # Provides memoization for plugin's inner workings
