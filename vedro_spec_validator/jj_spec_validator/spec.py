@@ -128,12 +128,12 @@ class Spec:
                 if response is None:
                     return None
                 raw_spec = self._parse_spec(response)
+                if not self.cache_processed:
+                    save_cache(spec_link=self.spec_link, obj=raw_spec)
             schema_data = self._get_schema_from_json(raw_spec)
             dict_of_schemas = self._build_dict_of_schemas(schema_data)
             if self.cache_processed:
                 save_cache(spec_link=self.spec_link, obj=dict_of_schemas)
-            else:
-                save_cache(spec_link=self.spec_link, obj=raw_spec)
             return dict_of_schemas
         elif Path(self.spec_link).is_absolute():
             raw_spec = self._get_raw_spec_from_file()
