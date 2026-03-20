@@ -154,6 +154,6 @@ class SpecValidator(PluginConfig):
 
     show_performance_metrics = False  # if True, execution time metrics will be printed to console
 
-    cache_as_processed_schemas = False # If True, converts specifications into schemas and caches them that way
+    cache_as_processed_schemas = False  # If True, converts specifications into schemas and caches them that way
 
-    memoizer_factory: Callable[[], Memoizer] = None  # Provides memoization for plugin's inner workings
+    memoizer_factory: Callable[[], Memoizer] = lambda: None  # Provides memoization for plugin's inner workings
