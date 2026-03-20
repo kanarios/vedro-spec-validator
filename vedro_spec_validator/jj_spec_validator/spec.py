@@ -1,23 +1,21 @@
-from typing import Any
-
 import json
-import yaml
-
-
-from ._config import Config
-from urllib.parse import urlparse
 from pathlib import Path
-import httpx
+from typing import Any
+from urllib.parse import urlparse
 
+import httpx
+import yaml
 from schemax import SchemaData, collect_schema_data
 
+from ._config import Config
 from .output import output
-from .utils._cacheir import validate_cache_file, save_cache, load_cache
+from .utils._cacheir import load_cache, save_cache, validate_cache_file
 
 
 class SchemaParseError(Exception):
     """Raised when a spec cannot be parsed into a schema."""
     pass
+
 
 class Spec:
     def __init__(self,
@@ -26,12 +24,14 @@ class Spec:
                  skip_if_failed_to_get_spec: bool = False,
                  is_strict: bool = False,
                  force_strict: bool = False,
+                 cache_processed: bool = False,
                  ):
         self.spec_link = spec_link
         self.func_name = func_name
         self.skip_if_failed_to_get_spec = skip_if_failed_to_get_spec
         self.is_strict = is_strict
         self.force_strict = force_strict
+        self.cache_processed = cache_processed
 
     def _download_spec(self) -> httpx.Response | None:
         def handle_exception(exc: Exception, message: str = ""):
@@ -41,6 +41,7 @@ class Spec:
             else:
                 exc.args = (message,) + exc.args[1:] if exc.args else (message,)
                 raise exc
+
         try:
             response = httpx.get(self.spec_link, timeout=Config.GET_SPEC_TIMEOUT)
             response.raise_for_status()
@@ -80,7 +81,7 @@ class Spec:
 
     def _get_schema_from_json(self, raw_spec: dict[str, Any]) -> list[SchemaData]:
         try:
-            schema_data = collect_schema_data(raw_spec)
+            schema_data = collect_schema_data(raw_spec, Config.MEMOIZER_FACTORY())
         except Exception as e:
             raise SchemaParseError(
                 f"Failed to parse {self.spec_link} to schema via schemax.\n"
@@ -119,19 +120,24 @@ class Spec:
 
         if urlparse(self.spec_link).scheme in ('http', 'https', 'ftp') and urlparse(self.spec_link).netloc:
             if validate_cache_file(self.spec_link):
+                if self.cache_processed:
+                    return load_cache(self.spec_link)
                 raw_spec = load_cache(self.spec_link)
             else:
                 response = self._download_spec()
                 if response is None:
                     return None
                 raw_spec = self._parse_spec(response)
-                save_cache(spec_link=self.spec_link, raw_schema=raw_spec)
+                if not self.cache_processed:
+                    save_cache(spec_link=self.spec_link, obj=raw_spec)
             schema_data = self._get_schema_from_json(raw_spec)
-            return self._build_dict_of_schemas(schema_data)
+            dict_of_schemas = self._build_dict_of_schemas(schema_data)
+            if self.cache_processed:
+                save_cache(spec_link=self.spec_link, obj=dict_of_schemas)
+            return dict_of_schemas
         elif Path(self.spec_link).is_absolute():
             raw_spec = self._get_raw_spec_from_file()
             schema_data = self._get_schema_from_json(raw_spec)
             return self._build_dict_of_schemas(schema_data)
         else:
             raise ValueError(f"{self.spec_link} is neither a valid URL nor a valid path")
-        

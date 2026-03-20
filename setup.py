@@ -1,7 +1,5 @@
 from setuptools import find_packages, setup
 
-from vedro_spec_validator.__version__ import __version__
-
 
 def find_required():
     with open("requirements.txt") as f:
@@ -10,7 +8,7 @@ def find_required():
 
 setup(
     name="vedro-spec-validator",
-    version=__version__,
+    version="0.2.0",
     description="Vedro Spec Validator plugin",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",

@@ -1,12 +1,12 @@
 import unittest
-from unittest.mock import patch, Mock, MagicMock
-
 from json import JSONDecodeError
+from unittest.mock import Mock, patch
+
 from d42.validation import ValidationException
 from schemax import SchemaData
 
-from vedro_spec_validator.jj_spec_validator.validator import Validator
 from vedro_spec_validator.jj_spec_validator.spec import Spec
+from vedro_spec_validator.jj_spec_validator.validator import Validator
 
 
 class TestValidationFailure(unittest.TestCase):

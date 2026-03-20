@@ -7,7 +7,7 @@ from jj import RelayResponse
 
 from ._config import Config
 from .output import output
-from .spec import Spec, SchemaParseError
+from .spec import Spec
 from .validator import Validator
 
 _T = TypeVar('_T')
@@ -34,6 +34,7 @@ def validate_spec(*,
        prefix: Prefix is used to cut paths prefix in mock function.
        force_strict: If True - forced remove all Ellipsis from the spec.
     """
+
     def decorator(func: Callable[..., _T]) -> Callable[..., _T]:
         func_name = func.__name__
 
@@ -45,7 +46,8 @@ def validate_spec(*,
                 func_name=func_name,
                 skip_if_failed_to_get_spec=skip_if_failed_to_get_spec if skip_if_failed_to_get_spec is not None else Config.SKIP_IF_FAILED_TO_GET_SPEC,
                 is_strict=is_strict if is_strict is not None else Config.IS_STRICT,
-                force_strict=force_strict
+                force_strict=force_strict,
+                cache_processed=Config.CACHE_AS_PROCESSED_SCHEMAS,
             )
 
             validator = Validator(
@@ -56,7 +58,7 @@ def validate_spec(*,
                 skip_if_failed_to_get_spec=skip_if_failed_to_get_spec if skip_if_failed_to_get_spec is not None else Config.SKIP_IF_FAILED_TO_GET_SPEC,
                 is_raise_error=is_raise_error if is_raise_error is not None else Config.IS_RAISES,
                 is_strict=is_strict if is_strict is not None else Config.IS_STRICT
-                )
+            )
 
         @wraps(func)
         async def async_wrapper(*args: object, **kwargs: object) -> _T:
@@ -65,14 +67,15 @@ def validate_spec(*,
                 if isinstance(mocked.handler.response, RelayResponse):
                     print("RelayResponse type is not supported")
                     return mocked
-                
+
                 start_validate_time = time.perf_counter() if Config.SHOW_PERFORMANCE_METRICS else None
                 validator.validate(mocked, spec)
-                
+
                 if Config.SHOW_PERFORMANCE_METRICS and start_validate_time is not None:
                     validate_time = time.perf_counter() - start_validate_time
                     print(f"🕒 [{func_name}] Validation time: {validate_time:.4f} sec")
-            else:...
+            else:
+                ...
             return mocked
 
         @wraps(func)
@@ -82,18 +85,20 @@ def validate_spec(*,
                 if isinstance(mocked.handler.response, RelayResponse):
                     print("RelayResponse type is not supported")
                     return mocked
-                
+
                 start_validate_time = time.perf_counter() if Config.SHOW_PERFORMANCE_METRICS else None
                 validator.validate(mocked, spec)
-                
+
                 if Config.SHOW_PERFORMANCE_METRICS and start_validate_time is not None:
                     validate_time = time.perf_counter() - start_validate_time
                     print(f"🕒 [{func_name}] Validation time: {validate_time:.4f} sec")
-            else:...
+            else:
+                ...
             return mocked
 
         if asyncio.iscoroutinefunction(func):
             return async_wrapper
         else:
             return sync_wrapper
+
     return decorator
