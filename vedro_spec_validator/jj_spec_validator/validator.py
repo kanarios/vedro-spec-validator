@@ -31,8 +31,6 @@ def response_structure(obj: Any) -> tuple[Any, ...] | str:
             return ("list",)
         case [first, *_]:
             return ("list", response_structure(first))
-        case str():
-            return ("str",)
         case _:
             return type(obj).__name__
 
