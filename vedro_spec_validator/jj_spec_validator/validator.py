@@ -27,8 +27,6 @@ def response_structure(obj: Any) -> tuple[Any, ...] | str:
     match obj:
         case dict():
             return tuple(sorted((k, response_structure(v)) for k, v in obj.items()))
-        case []:
-            return ("list",)
         case [first, *_]:
             return ("list", response_structure(first))
         case _:
