@@ -11,6 +11,32 @@ from .utils._refiner import has_ellipsis_in_all_branches
 
 _T = TypeVar('_T')
 
+
+def extract_body(mocked: Any) -> Any:
+    """Extracts response body from mock: parses JSON or returns text."""
+    if mocked.handler.response.content_type.lower().startswith("application/json"):
+        return loads(mocked.handler.response.get_body())
+    return mocked.handler.response.text
+
+
+def response_structure(obj: Any) -> tuple[Any, ...] | str:
+    """
+    Recursively computes the response structure — a hashable representation of keys and value types.
+    Used for caching: if a structure has already been validated, repeated validation is skipped.
+    """
+    match obj:
+        case dict():
+            return tuple(sorted((k, response_structure(v)) for k, v in obj.items()))
+        case []:
+            return ("list",)
+        case [first, *_]:
+            return ("list", response_structure(first))
+        case str():
+            return ("str",)
+        case _:
+            return type(obj).__name__
+
+
 class Validator:
 
     def __init__(self,
@@ -40,13 +66,10 @@ class Validator:
     def _prepare_validation(self, mocked, spec: Spec,
                            ) -> tuple[SchemaData | None, Any] | tuple[None, None]:
 
-        if mocked.handler.response.content_type.lower().startswith("application/json"):
-            try:
-                mocked_body = loads(mocked.handler.response.get_body())
-            except JSONDecodeError:
-                raise AssertionError(f"There is no valid JSON in {self.func_name}")
-        else:
-            mocked_body = mocked.handler.response.text
+        try:
+            mocked_body = extract_body(mocked)
+        except JSONDecodeError:
+            raise AssertionError(f"There is no valid JSON in {self.func_name}")
 
         mock_matcher = mocked.handler.matcher
         spec_matcher = create_openapi_matcher(matcher=mock_matcher, prefix=self.prefix)

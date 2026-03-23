@@ -8,7 +8,7 @@ from jj import RelayResponse
 from ._config import Config
 from .output import output
 from .spec import Spec
-from .validator import Validator
+from .validator import Validator, extract_body, response_structure
 
 _T = TypeVar('_T')
 
@@ -37,6 +37,8 @@ def validate_spec(*,
 
     def decorator(func: Callable[..., _T]) -> Callable[..., _T]:
         func_name = func.__name__
+        # Per-decorator cache of validated response structures; skips re-validation entirely on cache hit
+        validated_structures: set = set()
 
         if skip_reason:
             output(text=f"{func_name} is skipped because: {skip_reason}")
@@ -68,12 +70,22 @@ def validate_spec(*,
                     print("RelayResponse type is not supported")
                     return mocked
 
+                # Check cache BEFORE calling validate — skip all heavy work
+                if Config.SKIP_VALIDATED_STRUCTURES:
+                    structure = response_structure(extract_body(mocked))
+                    if structure in validated_structures:
+                        return mocked
+
                 start_validate_time = time.perf_counter() if Config.SHOW_PERFORMANCE_METRICS else None
                 validator.validate(mocked, spec)
 
                 if Config.SHOW_PERFORMANCE_METRICS and start_validate_time is not None:
                     validate_time = time.perf_counter() - start_validate_time
                     print(f"🕒 [{func_name}] Validation time: {validate_time:.4f} sec")
+
+                # Add structure to cache after successful validation
+                if Config.SKIP_VALIDATED_STRUCTURES:
+                    validated_structures.add(structure)
             else:
                 ...
             return mocked
@@ -86,12 +98,20 @@ def validate_spec(*,
                     print("RelayResponse type is not supported")
                     return mocked
 
+                if Config.SKIP_VALIDATED_STRUCTURES:
+                    structure = response_structure(extract_body(mocked))
+                    if structure in validated_structures:
+                        return mocked
+
                 start_validate_time = time.perf_counter() if Config.SHOW_PERFORMANCE_METRICS else None
                 validator.validate(mocked, spec)
 
                 if Config.SHOW_PERFORMANCE_METRICS and start_validate_time is not None:
                     validate_time = time.perf_counter() - start_validate_time
                     print(f"🕒 [{func_name}] Validation time: {validate_time:.4f} sec")
+
+                if Config.SKIP_VALIDATED_STRUCTURES:
+                    validated_structures.add(structure)
             else:
                 ...
             return mocked

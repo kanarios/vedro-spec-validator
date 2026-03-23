@@ -32,6 +32,7 @@ class SpecValidatorPlugin(Plugin):
         jj_sv_Config.OUTPUT_FUNCTION = self._custom_output
         jj_sv_Config.MEMOIZER_FACTORY = config.memoizer_factory
         jj_sv_Config.CACHE_AS_PROCESSED_SCHEMAS = config.cache_as_processed_schemas
+        jj_sv_Config.SKIP_VALIDATED_STRUCTURES = config.skip_validated_structures
         schemax.Config.OUTPUT_FUNCTION = self._schemax_output_catcher
 
     def subscribe(self, dispatcher: Dispatcher) -> None:
@@ -155,5 +156,7 @@ class SpecValidator(PluginConfig):
     show_performance_metrics = False  # if True, execution time metrics will be printed to console
 
     cache_as_processed_schemas = False  # If True, converts specifications into schemas and caches them that way
+
+    skip_validated_structures = False  # If True, skips validation for already validated response structures
 
     memoizer_factory: Callable[[], Memoizer] = lambda: None  # Provides memoization for plugin's inner workings
